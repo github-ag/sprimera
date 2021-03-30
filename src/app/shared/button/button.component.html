@@ -1,0 +1,11 @@
+<button class="btn btn-primary" [class]="buttonCss" (click)="callBackHandler()">
+  <div fxLayout="row" [fxLayoutAlign]="align">
+    <span *ngIf="leftIcon" class="material-icons" style="font-size: 23px"
+    [class]="labelCss"
+    >{{image}}</span>
+    <span>{{label}}</span>
+    <span *ngIf="!leftIcon" class="material-icons" style="font-size: 23px"
+    [class]="labelCss"
+    >{{image}}</span>
+  </div>
+</button>
