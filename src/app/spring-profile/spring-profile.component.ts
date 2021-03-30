@@ -42,8 +42,8 @@ export class SpringProfileComponent implements OnInit {
   private profiles: ProfileDataTO[] = [];
   private profileIndex = -1;
 
-  private SPACE_REPLACE = '';
   private aggregatedContent = '';
+  private SPACE_REPLACE = '';
 
   constructor(private profileAggregateService: ProfileAggregatorService) {
     this.SPACE_REPLACE = ' '.repeat(this.SPACES_TO_ONE_TAB);
