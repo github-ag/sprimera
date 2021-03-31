@@ -1,3 +1,4 @@
 export const environment = {
-  production: true
+  production: true,
+  baseURL: 'https://config-mapper-tool.herokuapp.com/v1'
 };
