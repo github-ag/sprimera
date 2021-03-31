@@ -2,8 +2,9 @@
   "name": "config-mapper",
   "version": "0.0.0",
   "scripts": {
+    "heroku-postbuild": "ng build --prod && npm install -g http-server-spa",
     "ng": "ng",
-    "start": "ng serve",
+    "start": "http-server-spa dist/config-mapper index.html $PORT",
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
