@@ -1,6 +1,6 @@
-<div class="container border">
-  <div class="mt-3 mb-3">
-    <div class="border rounded-top p-3">
+<div>
+  <div class="m-3">
+    <div class="border rounded-top p-3" fxLayout.lt-sm="column">
       <input #fileChooser type="file" accept=".yml" multiple (change)="uploadFiles($event); fileChooser.value=''" style="display: none;"/>
       <app-button [label]="'Choose'" [image]="'add'" (clicked)="fileChooserExecute(fileChooser)"
       [labelCss]="'mr-2'">
@@ -29,17 +29,17 @@
             <div class="p-2 custom-box" cdkDrag [cdkDragDisabled]="profileData.dragDisabled">
               <div class="profile-box">
                 <div fxLayout="row" fxLayoutAlign="start stretch">
+                  <div id="profile-expand-status-{{i}}" style="width:5px" class="mr-2"></div>
                   <div fxFlex="row" fxFlex="90" fxLayoutAlign="start center" class="profile-collapse"
                   (click)="updateYAML(profileData.file, 'profile-yaml-' + i, i)"
                   >
-                    <div fxFlex="10" fxLayoutAlign="start center">
+                    <div fxFlex="20" fxLayoutAlign="start center">
                       <img src="../../assets/yaml-profile.png" style="height: 45px;">
                     </div>
                     <div fxFlex="60" fxLayoutAlign="start center">{{profileData.file.name}}</div>
-                    <div fxFlex="10" fxLayoutAlign="start center">
+                    <div fxFlex="20" fxLayoutAlign="start center" fxHide.lt-sm>
                       {{profileData.file.size/1024 | number: '0.0-2'}} KB
                     </div>
-                    <div fxFlex="20" fxLayoutAlign="end center">{{profileData.file.lastModified | date}}</div>
                   </div>
 
                   <div fxFlex="10" fxLayoutAlign="end center">

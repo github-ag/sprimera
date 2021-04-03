@@ -78,6 +78,8 @@ export class SpringProfileComponent implements OnInit {
         this.profiles.push(new ProfileDataTO(file));
         this.aggregatedContent = '';
 
+        const index = this.profiles.length - 1;
+
         const reader = new FileReader();
         reader.onload = (e: any) => {
           const content = e?.target?.result || '';
@@ -85,6 +87,9 @@ export class SpringProfileComponent implements OnInit {
           this.profileToContentMapper.set(file.name,
             this.replaceAll(content, '\t', this.SPACE_REPLACE)
           );
+
+          const divStatus = document.getElementById('profile-expand-status-' + index);
+          this.updateCssValidate(divStatus, file, content);
         };
         reader.readAsText(file);
       }
@@ -170,32 +175,35 @@ export class SpringProfileComponent implements OnInit {
       );
       codemirror.setSize('100%', 300);
 
+      const divStatus = document.getElementById('profile-expand-status-' + index);
       const reader = new FileReader();
       reader.onload = (e: any) => {
         const content = e?.target?.result || '';
         codemirror.setValue(content);
         codemirror.refresh();
+
+        this.updateCssValidate(divStatus, file, content);
       };
       reader.readAsText(file);
       this.profileYAMLLoaded.add(file.name);
 
-      const divElement = document.getElementById('profile-expand-' + index);
-      if (divElement) {
-        codemirror.on('change', (event) => {
+      codemirror.on('change', (event) => {
 
-          const content = this.replaceAll(event.getValue(), '\t', this.SPACE_REPLACE);
-          this.profileToContentMapper.set(file.name, content);
+        const content = this.replaceAll(event.getValue(), '\t', this.SPACE_REPLACE);
+        this.profileToContentMapper.set(file.name, content);
 
-          if (this.validateYAML(file, content)) {
-            this.toggleValidInValid(divElement, 'border-danger', 'border-success');
-          }
-          else {
-            this.toggleValidInValid(divElement, 'border-success', 'border-danger');
-          }
-        });
-      }
+        this.updateCssValidate(divStatus, file, content);
+      });
     }
+  }
 
+  updateCssValidate(divStatus: any, file: File, content: string): void {
+    if (this.validateYAML(file, content)) {
+      this.toggleValidInValid(divStatus, 'bg-warning', 'bg-success');
+    }
+    else {
+      this.toggleValidInValid(divStatus, 'bg-success', 'bg-warning');
+    }
   }
 
   replaceAll(data: string, search: string, replace: string): string {

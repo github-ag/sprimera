@@ -4,7 +4,8 @@
 
 export const environment = {
   production: false,
-  baseURL: 'localhost:8080/v1'
+  baseURL: 'https://config-mapper-tool.herokuapp.com/v1'
+  // baseURL: 'localhost:8080/v1'
 };
 
 /*
