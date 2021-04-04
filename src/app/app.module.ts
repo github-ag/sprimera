@@ -10,7 +10,6 @@ import { AppRoutingModule } from './app-routing.module';
 
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { SpringProfileModule } from './spring-profile/spring-profile.module';
-import { DemoMaterialModule } from './material-module';
 
 @NgModule({
   declarations: [
@@ -22,7 +21,6 @@ import { DemoMaterialModule } from './material-module';
     FlexLayoutModule,
     HttpClientModule,
     SpringProfileModule,
-    DemoMaterialModule,
     DragDropModule
   ],
   providers: [],
