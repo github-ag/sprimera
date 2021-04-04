@@ -26,6 +26,8 @@ export class SpringProfileComponent implements OnInit {
 
   SPACES_TO_ONE_TAB = 2;
 
+  IS_DRAGGABLE = false;
+
   CODEMIRROR_CONFIG: any = {
     theme: 'idea',
     mode: 'yaml',
@@ -73,6 +75,10 @@ export class SpringProfileComponent implements OnInit {
     this.profileIndex = -1;
 
     console.log('ngOnInit');
+  }
+
+  toggleEnableDrag(): void {
+    this.IS_DRAGGABLE = !this.IS_DRAGGABLE;
   }
 
   getProfileIndex(): number {

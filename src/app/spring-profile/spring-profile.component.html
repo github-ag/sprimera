@@ -1,17 +1,28 @@
 <div>
   <div class="m-3">
-    <div class="border rounded-top p-3" fxLayout.lt-sm="column">
+    <div class="border rounded-top p-3" fxLayout="row" fxLayout.lt-sm="column">
       <input #fileChooser type="file" accept=".yml" multiple (change)="uploadFiles($event); fileChooser.value=''" style="display: none;"/>
       <app-button [label]="'Choose'" [image]="'add'" (clicked)="fileChooserExecute(fileChooser)"
-      [labelCss]="'mr-2'">
+      [labelCss]="'mr-2'" [buttonCss]="'mr-3'">
       </app-button>
       <app-button [label]="'Clear'" [image]="'close'" (clicked)="clearFiles()"
-      [labelCss]="'mr-2'" [buttonCss]="'ml-3'">
+      [labelCss]="'mr-2'" [buttonCss]="'mr-3'">
       </app-button>
 
       <app-button [label]="'Aggregate'" [image]="'send'" (clicked)="aggregateProfiles()"
-      [labelCss]="'ml-2'" [leftIcon]="false" [buttonCss]="'ml-3'">
+      [labelCss]="'ml-2'" [leftIcon]="false" [buttonCss]="'mr-3'">
       </app-button>
+
+      <div class="mr-3 border rounded pl-1 pr-1" fxLayout="column" fxLayoutAlign="start center">
+        <div class="form-check">
+          <input type="checkbox" style="height: 27px; width: 27px;" (change)="toggleEnableDrag()"
+          class="form-check-input" id="dragCheckbox">
+          <label class="form-check-label ml-3 mt-1" style="font-size: 16px; font-weight: bold;"
+          for="dragCheckbox">
+            Enable Drag
+          </label>
+        </div>
+      </div>
     </div>
     <div class="border border-top-0 rounded-bottom p-3">
       <div *ngIf="getProfiles().length === 0">
@@ -26,7 +37,7 @@
       <div>
         <div cdkDropList class="custom-list" fxLayout="column" fxLayoutAlign="start stretch" (cdkDropListDropped)="drop($event)">
           <div class="border mb-2" *ngFor="let profileData of getProfiles(); let i = index">
-            <div class="p-2 custom-box" cdkDrag [cdkDragDisabled]="profileData.dragDisabled">
+            <div class="p-2 custom-box" cdkDrag [cdkDragDisabled]="profileData.dragDisabled || !IS_DRAGGABLE">
               <div class="profile-box">
                 <div fxLayout="row" fxLayoutAlign="start stretch">
                   <div id="profile-expand-status-{{i}}" style="width:5px" class="mr-2"></div>
