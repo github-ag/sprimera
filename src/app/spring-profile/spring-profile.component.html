@@ -30,6 +30,13 @@
               <div class="profile-box">
                 <div fxLayout="row" fxLayoutAlign="start stretch">
                   <div id="profile-expand-status-{{i}}" style="width:5px" class="mr-2"></div>
+
+                  <input style="width:20px; cursor:pointer" class="mr-2"
+                    [style.background]="profileData.color"
+                    [(colorPicker)]="profileData.color"
+                    [cpOutputFormat]="'hex'"
+                  />
+
                   <div fxFlex="row" fxFlex="90" fxLayoutAlign="start center" class="profile-collapse"
                   (click)="updateYAML(profileData.file, 'profile-yaml-' + i, i)"
                   >

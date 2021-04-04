@@ -1,11 +1,21 @@
 import { ProfileDataTO } from './../shared/models/ProfileDataTO';
 import { ProfileSpecTO } from './../shared/models/ProfileSpecTO';
 import { ProfileAggregatorService } from './../shared/profile-aggregator/profile-aggregator.service';
-import { ThrowStmt } from '@angular/compiler';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Renderer2 } from '@angular/core';
 import * as CodeMirror from 'codemirror';
 import * as yaml from 'js-yaml';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+
+import 'codemirror/mode/yaml/yaml';
+import 'codemirror/lib/codemirror';
+import 'codemirror/addon/lint/lint';
+import 'codemirror/addon/lint/yaml-lint';
+import 'codemirror/addon/fold/foldgutter';
+import 'codemirror/addon/fold/indent-fold';
+import 'codemirror/addon/fold/foldcode';
+
+import 'codemirror/addon/edit/closebrackets';
+import 'codemirror/addon/edit/matchbrackets';
 
 @Component({
   selector: 'app-spring-profile',
@@ -17,8 +27,8 @@ export class SpringProfileComponent implements OnInit {
   SPACES_TO_ONE_TAB = 2;
 
   CODEMIRROR_CONFIG: any = {
-    theme: 'monokai',
-    mode: 'application/ld+json',
+    theme: 'idea',
+    mode: 'yaml',
     lineNumbers: true,
     foldGutter: true,
     tabSize: this.SPACES_TO_ONE_TAB,
@@ -32,6 +42,7 @@ export class SpringProfileComponent implements OnInit {
     autoCloseBrackets: true,
     matchBrackets: true
   };
+
   private profileYAMLLoaded = new Set();
 
   isCollapse = true;
@@ -45,7 +56,9 @@ export class SpringProfileComponent implements OnInit {
   private aggregatedContent = '';
   private SPACE_REPLACE = '';
 
-  constructor(private profileAggregateService: ProfileAggregatorService) {
+  private currentLineInEditor = 0;
+
+  constructor(private renderer: Renderer2, private profileAggregateService: ProfileAggregatorService) {
     this.SPACE_REPLACE = ' '.repeat(this.SPACES_TO_ONE_TAB);
   }
 
@@ -249,14 +262,13 @@ export class SpringProfileComponent implements OnInit {
     this.profiles.forEach((profileDataTO: ProfileDataTO) => {
       profileAggregateList.push(
         new ProfileSpecTO(profileDataTO.file.name,
-        this.profileToContentMapper.get(profileDataTO.file.name))
+        this.profileToContentMapper.get(profileDataTO.file.name), profileDataTO.color)
       );
     });
 
     this.aggregatedContent = '';
     this.profileAggregateService.aggregateProfile(profileAggregateList).subscribe(
       (response: ProfileSpecTO) => {
-
         const parent = document.getElementById('display-aggregate');
         if (parent) {
           parent.innerHTML = '<textarea id="aggregate-textarea-content"></textarea>';
@@ -268,16 +280,103 @@ export class SpringProfileComponent implements OnInit {
         modifyConfig
         );
 
-        this.aggregatedContent = response.content;
+        const jsonObject  = response.jsonContent;
+        const jsonContent = JSON.stringify(jsonObject, null, this.SPACES_TO_ONE_TAB);
+        this.aggregatedContent = jsonContent;
+
         setTimeout(() => {
-          codemirror.setValue(response.content);
-          codemirror.setSize('100%', 350);
+
+          codemirror.setValue(this.aggregatedContent);
+          codemirror.setSize('100%', '100%');
           codemirror.refresh();
-        }, 250);
+
+          setTimeout(() => this.updateCodeMirrorVisual(codemirror, response.propertyList, jsonObject), 500);
+        }, 500);
       },
       (error) => {
         console.error(error);
       }
     );
+  }
+
+  updateCodeMirrorVisual(doc: any, propertyList: any, jsonObject: any): void {
+
+    const parent = document.getElementById('display-aggregate');
+    const lineElements = parent?.getElementsByClassName('CodeMirror-linenumber CodeMirror-gutter-elt');
+    if (lineElements) {
+
+      const profileMapper = new Map();
+      this.currentLineInEditor = 2;
+
+      // console.log(jsonObject);
+      this.getLineOfEachPropertyValue('', jsonObject, profileMapper, false);
+
+      const profileColorMap = new Map(this.getProfiles().map(i => [i.file.name, i.color]));
+
+      // console.log(propertyList);
+      // console.log(profileMapper);
+      for (let i = 0; i < propertyList.length; ++i) {
+        const prop = propertyList[i];
+        const lineNumber = profileMapper.get(prop.property);
+        this.updateColor(lineElements[lineNumber], profileColorMap.get(prop.owner));
+      }
+    }
+  }
+
+  updateColor(element: any, color: any): void {
+    element.style['background-color'] = color;
+  }
+
+  ////////////////////// CODE MIRROR VISUAL CHANGE
+
+  highlightLineInDoc(lineNumber: number, doc: any): void {
+    doc.markText({line: lineNumber, ch: 0}, {line: lineNumber, ch: 1000}, {
+      css: 'background-color: red'
+    });
+  }
+
+  getLineOfEachPropertyValue(path: string, root: any,  profileMapper: any, isArray: boolean): void {
+
+    // console.log(1, path, root, `line : ${this.currentLineInEditor}`);
+
+    const parentIndex = this.currentLineInEditor;
+    for (const pro of Object.keys(root)) {
+      const val = root[pro];
+      const newPath = this.generatePropertyPath(path, pro);
+
+      if (this.propertyType(val) === 'primitive' && isArray) {
+        profileMapper.set(path, parentIndex - 1);
+        // console.log(`2 line : ${parentIndex - 1} >> ${path} = ${val}`);
+        ++this.currentLineInEditor;
+        continue;
+      }
+      if (val instanceof Object) {
+        // console.log(3, val, val instanceof Array, `line : ${this.currentLineInEditor}`);
+        ++this.currentLineInEditor;
+        this.getLineOfEachPropertyValue(newPath, val, profileMapper, val instanceof Array);
+      }
+      else {
+        profileMapper.set(newPath, this.currentLineInEditor);
+        // console.log(`4 LINE : ${this.currentLineInEditor} >> ${newPath} = ${val}`);
+      }
+      ++this.currentLineInEditor;
+    }
+  }
+
+  propertyType(value: any): string {
+    if (value instanceof Array) {
+      return 'Array';
+    }
+    else if (value instanceof Object) {
+      return 'object';
+    }
+    return 'primitive';
+  }
+
+  generatePropertyPath(path: string, property: string): string {
+    if (path === '') {
+      return property;
+    }
+    return `${path}.${property}`;
   }
 }
