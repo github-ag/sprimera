@@ -26,7 +26,7 @@ export class SpringProfileComponent implements OnInit {
 
   SPACES_TO_ONE_TAB = 2;
 
-  IS_DRAGGABLE = false;
+  IS_DRAGGABLE = true;
 
   CODEMIRROR_CONFIG: any = {
     theme: 'idea',

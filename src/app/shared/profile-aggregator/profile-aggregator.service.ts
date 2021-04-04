@@ -49,14 +49,17 @@ export class ProfileAggregatorService {
     return new ProfileSpecTO('', '', result, propertyList);
   }
 
-  mergeData(path: string, root: any, other: any, profile: string, arrayType: string): void {
+  mergeData(path: string, root: any, other: any, profile: string, parentType: string): void {
 
     // console.log(root, other, arrayType);
     for (const key of Object.keys(other)) {
-      if (!root.hasOwnProperty(key) && arrayType !== 'Array') {
+      if (!root.hasOwnProperty(key)) {
         // console.log(key, root[key], other[key], arrayType);
         // console.log(`${path}.${key} = ${profile}`);
-        root[key] = other[key];
+        if (parentType !== 'Array' || this.propertyType(other[key]) !== 'primitive') {
+          // console.log(path, parentType, this.propertyType(other[key]), key);
+          root[key] = other[key];
+        }
       }
       else {
         const rootType = this.propertyType(root[key]);
