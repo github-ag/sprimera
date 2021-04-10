@@ -192,7 +192,7 @@ export class SpringProfileComponent implements OnInit {
       const codemirror = CodeMirror.fromTextArea(document.getElementById(id) as HTMLTextAreaElement,
       this.CODEMIRROR_CONFIG
       );
-      codemirror.setSize('100%', 300);
+      codemirror.setSize('100%', 350);
 
       const divStatus = document.getElementById('profile-expand-status-' + index);
       const reader = new FileReader();
@@ -282,6 +282,8 @@ export class SpringProfileComponent implements OnInit {
 
         const modifyConfig = JSON.parse(JSON.stringify(this.CODEMIRROR_CONFIG));
         modifyConfig.readOnly = true;
+        modifyConfig.foldGutter = false;
+
         const codemirror = CodeMirror.fromTextArea(document.getElementById('aggregate-textarea-content') as HTMLTextAreaElement,
         modifyConfig
         );
@@ -296,7 +298,9 @@ export class SpringProfileComponent implements OnInit {
           codemirror.setSize('100%', '100%');
           codemirror.refresh();
 
-          setTimeout(() => this.updateCodeMirrorVisual(codemirror, response.propertyList, jsonObject), 500);
+          setTimeout(() => {
+            this.updateCodeMirrorVisual(codemirror, response.propertyList, jsonObject);
+          }, 500);
         }, 500);
       },
       (error) => {
@@ -319,18 +323,24 @@ export class SpringProfileComponent implements OnInit {
 
       const profileColorMap = new Map(this.getProfiles().map(i => [i.file.name, i.color]));
 
-      // console.log(propertyList);
-      // console.log(profileMapper);
+      console.log(propertyList);
+      console.log(profileMapper);
       for (let i = 0; i < propertyList.length; ++i) {
         const prop = propertyList[i];
         const lineNumber = profileMapper.get(prop.property);
         this.updateColor(lineElements[lineNumber], profileColorMap.get(prop.owner));
       }
+
+      this.getProfiles().forEach((profile, index) => {
+        this.updateColor(document.getElementById(`side-bar-${index}`), profile.color);
+      });
     }
   }
 
   updateColor(element: any, color: any): void {
-    element.style['background-color'] = color;
+    if (element) {
+      element.style['background-color'] = color;
+    }
   }
 
   ////////////////////// CODE MIRROR VISUAL CHANGE

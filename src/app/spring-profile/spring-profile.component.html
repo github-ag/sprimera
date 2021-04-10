@@ -36,7 +36,7 @@
       </div>
       <div>
         <div cdkDropList class="custom-list" fxLayout="column" fxLayoutAlign="start stretch" (cdkDropListDropped)="drop($event)">
-          <div class="border mb-2" *ngFor="let profileData of getProfiles(); let i = index">
+          <div class="border mb-2 rounded" *ngFor="let profileData of getProfiles(); let i = index">
             <div class="p-2 custom-box" cdkDrag [cdkDragDisabled]="profileData.dragDisabled || !IS_DRAGGABLE">
               <div class="profile-box">
                 <div fxLayout="row" fxLayoutAlign="start stretch">
@@ -83,10 +83,20 @@
       </div>
     </div>
 
-    <div class="aggregate-display">
-      <div class="pt-3" *ngIf="getAggregatedContent() !== ''"></div>
-      <div fxLayoutAlign="start stretch" id="display-aggregate" class="border rounded"
-      [hidden]="getAggregatedContent() === ''">
+    <div fxLayout="row" fxLayoutAlign="start stretch">
+      <div class="pt-3 mr-3" fxLayout="column" fxLayoutAlign="start stretch">
+        <div class="sticky">
+          <div *ngFor="let profile of getProfiles(); index as ind" id="side-bar-{{ind}}"
+          class="p-1 mb-2 border border-dark rounded font-weight-bold">
+            {{profile.file.name}}
+          </div>
+        </div>
+      </div>
+      <div class="aggregate-display w-100">
+        <div class="pt-3" *ngIf="getAggregatedContent() !== ''"></div>
+        <div fxLayoutAlign="start stretch" id="display-aggregate" class="border rounded"
+        [hidden]="getAggregatedContent() === ''">
+        </div>
       </div>
     </div>
   </div>
