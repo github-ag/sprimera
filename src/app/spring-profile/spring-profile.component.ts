@@ -337,12 +337,12 @@ export class SpringProfileComponent implements OnInit {
       // console.log(jsonObject);
       this.getLineOfEachPropertyValue('', jsonObject, profileMapper, false);
 
-      // console.log(this.lineToPropertyBreadcrumb);
+      // console.log(this.lineToPropertyBreadcrumbMap);
 
       const profileColorMap = new Map(this.getProfiles().map(i => [i.file.name, i.color]));
 
       // console.log(propertyList);
-      console.log(profileMapper);
+      // console.log(profileMapper);
       for (let i = 0; i < propertyList.length; ++i) {
         const prop = propertyList[i];
         const lineNumber = profileMapper.get(prop.property);
@@ -432,9 +432,38 @@ export class SpringProfileComponent implements OnInit {
   updateEditorCursorPosition(index: number): void {
     this.mergeEditor.focus();
 
-    const cursorPos = this.propertyTolineBreadcrumbMap.get(this.getEditorBreadcrumbArray().slice(0, index + 1).join('.'));
-    if (cursorPos !== null) {
-      this.mergeEditor.setCursor(cursorPos - 1, 0);
+    const path = this.getEditorBreadcrumbArray().slice(0, index + 1).join('.');
+    const cursorPos = this.propertyTolineBreadcrumbMap.get(path);
+
+    // console.log(path);
+    try {
+      if (cursorPos !== null) {
+        // console.log(cursorPos - 1);
+        this.mergeEditor.setCursor(cursorPos - 1, 0);
+      }
+
+      const startLastIndex = this.getPropertyStartEndIndex(this.mergeEditor.getLine(cursorPos - 1));
+      this.mergeEditor.setSelection(
+        {line: cursorPos - 1, ch: startLastIndex[0]},
+        {line: cursorPos - 1, ch: startLastIndex[1]}
+      );
+    } catch (exception) {
+      console.error(exception);
     }
+  }
+
+  getPropertyStartEndIndex(line: string): any {
+
+    const start = line.indexOf('"');
+    if (start === -1) {
+      return [0, 0];
+    }
+    for (let last = start + 1; last < line.length; ++last) {
+      if (line.charAt(last - 1) !== '\\' && line.charAt(last) === '"') {
+        return [start, last + 1];
+      }
+    }
+
+    return [0, 0];
   }
 }
