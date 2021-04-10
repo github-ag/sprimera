@@ -85,17 +85,30 @@
 
     <div fxLayout="row" fxLayoutAlign="start stretch">
       <div class="pt-3 mr-3" fxLayout="column" fxLayoutAlign="start stretch">
-        <div class="sticky">
+        <div class="sticky" *ngIf="getAggregatedContent() !== ''">
           <div *ngFor="let profile of getProfiles(); index as ind" id="side-bar-{{ind}}"
           class="p-1 mb-2 border border-dark rounded font-weight-bold">
             {{profile.file.name}}
           </div>
         </div>
       </div>
-      <div class="aggregate-display w-100">
-        <div class="pt-3" *ngIf="getAggregatedContent() !== ''"></div>
-        <div fxLayoutAlign="start stretch" id="display-aggregate" class="border rounded"
-        [hidden]="getAggregatedContent() === ''">
+      <div class="w-100">
+        <div class="sticky mt-3" *ngIf="getAggregatedContent() !== ''">
+          <div class="p-2 border rounded bg-dark">
+            <code class="text-white">
+              <span *ngFor="let property of getEditorBreadcrumbArray(); index as i">>
+                <a class="link" (click)="updateEditorCursorPosition(i)"
+                style="text-decoration: none; cursor: pointer">{{property}}
+                </a>
+              </span>
+            </code>
+          </div>
+        </div>
+        <div class="aggregate-display w-100 bg-white">
+          <div class="pt-3" *ngIf="getAggregatedContent() !== ''"></div>
+          <div fxLayoutAlign="start stretch" id="display-aggregate" class="border rounded"
+          [hidden]="getAggregatedContent() === ''">
+          </div>
         </div>
       </div>
     </div>

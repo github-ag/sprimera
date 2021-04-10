@@ -42,7 +42,8 @@ export class SpringProfileComponent implements OnInit {
       'CodeMirror-lint-markers'
     ],
     autoCloseBrackets: true,
-    matchBrackets: true
+    matchBrackets: true,
+    autofocus: true
   };
 
   private profileYAMLLoaded = new Set();
@@ -59,6 +60,11 @@ export class SpringProfileComponent implements OnInit {
   private SPACE_REPLACE = '';
 
   private currentLineInEditor = 0;
+
+  private lineToPropertyBreadcrumbMap: any;
+  private propertyTolineBreadcrumbMap: any;
+  private breadcrumbEditorLine = -1;
+  private mergeEditor: any;
 
   constructor(private renderer: Renderer2, private profileAggregateService: ProfileAggregatorService) {
     this.SPACE_REPLACE = ' '.repeat(this.SPACES_TO_ONE_TAB);
@@ -288,6 +294,12 @@ export class SpringProfileComponent implements OnInit {
         modifyConfig
         );
 
+        this.mergeEditor = codemirror;
+
+        codemirror.on('dblclick', (instance: any, event: Event) => {
+          this.breadcrumbEditorLine = instance.getCursor().line + 1;
+        });
+
         const jsonObject  = response.jsonContent;
         const jsonContent = JSON.stringify(jsonObject, null, this.SPACES_TO_ONE_TAB);
         this.aggregatedContent = jsonContent;
@@ -318,12 +330,18 @@ export class SpringProfileComponent implements OnInit {
       const profileMapper = new Map();
       this.currentLineInEditor = 2;
 
+      this.lineToPropertyBreadcrumbMap = new Map();
+      this.propertyTolineBreadcrumbMap = new Map();
+      this.breadcrumbEditorLine = -1;
+
       // console.log(jsonObject);
       this.getLineOfEachPropertyValue('', jsonObject, profileMapper, false);
 
+      // console.log(this.lineToPropertyBreadcrumb);
+
       const profileColorMap = new Map(this.getProfiles().map(i => [i.file.name, i.color]));
 
-      console.log(propertyList);
+      // console.log(propertyList);
       console.log(profileMapper);
       for (let i = 0; i < propertyList.length; ++i) {
         const prop = propertyList[i];
@@ -363,11 +381,18 @@ export class SpringProfileComponent implements OnInit {
       if (this.propertyType(val) === 'primitive' && isArray) {
         profileMapper.set(path, parentIndex - 1);
         // console.log(`2 line : ${parentIndex - 1} >> ${path} = ${val}`);
+        this.lineToPropertyBreadcrumbMap.set(this.currentLineInEditor, `${newPath}.${val}`);
+        this.propertyTolineBreadcrumbMap.set(`${newPath}.${val}`, this.currentLineInEditor);
+        // console.log(`${newPath}.${val} = line : ${this.currentLineInEditor}`);
         ++this.currentLineInEditor;
         continue;
       }
+
+      this.lineToPropertyBreadcrumbMap.set(this.currentLineInEditor, newPath);
+      this.propertyTolineBreadcrumbMap.set(newPath, this.currentLineInEditor);
+      // console.log(`${newPath} = line : ${this.currentLineInEditor}`);
+
       if (val instanceof Object) {
-        // console.log(3, val, val instanceof Array, `line : ${this.currentLineInEditor}`);
         ++this.currentLineInEditor;
         this.getLineOfEachPropertyValue(newPath, val, profileMapper, val instanceof Array);
       }
@@ -394,5 +419,22 @@ export class SpringProfileComponent implements OnInit {
       return property;
     }
     return `${path}.${property}`;
+  }
+
+  getEditorBreadcrumbArray(): string[] {
+    return this.lineToPropertyBreadcrumbMap?.get(this.breadcrumbEditorLine)?.split('.') || [''];
+  }
+
+  getBreadcrumbEditorLine(): number {
+    return this.breadcrumbEditorLine;
+  }
+
+  updateEditorCursorPosition(index: number): void {
+    this.mergeEditor.focus();
+
+    const cursorPos = this.propertyTolineBreadcrumbMap.get(this.getEditorBreadcrumbArray().slice(0, index + 1).join('.'));
+    if (cursorPos !== null) {
+      this.mergeEditor.setCursor(cursorPos - 1, 0);
+    }
   }
 }
