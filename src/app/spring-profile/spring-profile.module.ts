@@ -8,6 +8,8 @@ import { SpringProfileComponent } from './spring-profile.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import {MatIconModule} from '@angular/material/icon';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { ColorPickerModule } from 'ngx-color-picker';
+import {MatCheckboxModule} from '@angular/material/checkbox';
 
 @NgModule({
   declarations: [SpringProfileComponent],
@@ -19,7 +21,9 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     MatIconModule,
     SharedModule,
     CodemirrorModule,
-    DragDropModule
+    DragDropModule,
+    ColorPickerModule,
+    MatCheckboxModule
   ],
   exports: [SpringProfileComponent]
 })

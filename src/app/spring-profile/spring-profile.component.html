@@ -1,17 +1,28 @@
-<div class="container border">
-  <div class="mt-3 mb-3">
-    <div class="border rounded-top p-3">
+<div>
+  <div class="m-3">
+    <div class="border rounded-top p-3" fxLayout="row" fxLayout.lt-sm="column">
       <input #fileChooser type="file" accept=".yml" multiple (change)="uploadFiles($event); fileChooser.value=''" style="display: none;"/>
       <app-button [label]="'Choose'" [image]="'add'" (clicked)="fileChooserExecute(fileChooser)"
-      [labelCss]="'mr-2'">
+      [labelCss]="'mr-2'" [buttonCss]="'mr-3'">
       </app-button>
       <app-button [label]="'Clear'" [image]="'close'" (clicked)="clearFiles()"
-      [labelCss]="'mr-2'" [buttonCss]="'ml-3'">
+      [labelCss]="'mr-2'" [buttonCss]="'mr-3'">
       </app-button>
 
       <app-button [label]="'Aggregate'" [image]="'send'" (clicked)="aggregateProfiles()"
-      [labelCss]="'ml-2'" [leftIcon]="false" [buttonCss]="'ml-3'">
+      [labelCss]="'ml-2'" [leftIcon]="false" [buttonCss]="'mr-3'">
       </app-button>
+
+      <div class="mr-3 border rounded pl-1 pr-1" fxLayout="column" fxLayoutAlign="start center">
+        <div class="form-check">
+          <input type="checkbox" style="height: 27px; width: 27px;" (change)="toggleEnableDrag()"
+          class="form-check-input" id="dragCheckbox" checked>
+          <label class="form-check-label ml-3 mt-1" style="font-size: 16px; font-weight: bold;"
+          for="dragCheckbox">
+            Enable Drag
+          </label>
+        </div>
+      </div>
     </div>
     <div class="border border-top-0 rounded-bottom p-3">
       <div *ngIf="getProfiles().length === 0">
@@ -25,21 +36,28 @@
       </div>
       <div>
         <div cdkDropList class="custom-list" fxLayout="column" fxLayoutAlign="start stretch" (cdkDropListDropped)="drop($event)">
-          <div class="border mb-2" *ngFor="let profileData of getProfiles(); let i = index">
-            <div class="p-2 custom-box" cdkDrag>
+          <div class="border mb-2 rounded" *ngFor="let profileData of getProfiles(); let i = index">
+            <div class="p-2 custom-box" cdkDrag [cdkDragDisabled]="profileData.dragDisabled || !IS_DRAGGABLE">
               <div class="profile-box">
                 <div fxLayout="row" fxLayoutAlign="start stretch">
+                  <div id="profile-expand-status-{{i}}" style="width:5px" class="mr-2"></div>
+
+                  <input style="width:20px; cursor:pointer" class="mr-2"
+                    [style.background]="profileData.color"
+                    [(colorPicker)]="profileData.color"
+                    [cpOutputFormat]="'hex'"
+                  />
+
                   <div fxFlex="row" fxFlex="90" fxLayoutAlign="start center" class="profile-collapse"
                   (click)="updateYAML(profileData.file, 'profile-yaml-' + i, i)"
                   >
-                    <div fxFlex="10" fxLayoutAlign="start center">
+                    <div fxFlex="20" fxLayoutAlign="start center">
                       <img src="../../assets/yaml-profile.png" style="height: 45px;">
                     </div>
                     <div fxFlex="60" fxLayoutAlign="start center">{{profileData.file.name}}</div>
-                    <div fxFlex="10" fxLayoutAlign="start center">
+                    <div fxFlex="20" fxLayoutAlign="start center" fxHide.lt-sm>
                       {{profileData.file.size/1024 | number: '0.0-2'}} KB
                     </div>
-                    <div fxFlex="20" fxLayoutAlign="end center">{{profileData.file.lastModified | date}}</div>
                   </div>
 
                   <div fxFlex="10" fxLayoutAlign="end center">
@@ -48,7 +66,7 @@
                     ></app-button>
                   </div>
                 </div>
-                <div class="mt-1 border" #collapse="ngbCollapse" [(ngbCollapse)]="profileData.isCollapsed"
+                <div id="profile-expand-{{i}}" class="mt-1 border" #collapse="ngbCollapse" [(ngbCollapse)]="profileData.isCollapsed"
                 (mouseleave)="profileData.dragDisabled = false"
                 (mouseenter)="profileData.dragDisabled = true">
                   <textarea id="profile-yaml-{{i}}"></textarea>
@@ -65,10 +83,33 @@
       </div>
     </div>
 
-    <div class="aggregate-display">
-      <div class="pt-3" *ngIf="getAggregatedContent() !== ''"></div>
-      <div fxLayoutAlign="start stretch" id="display-aggregate" class="border rounded"
-      [hidden]="getAggregatedContent() === ''">
+    <div fxLayout="row" fxLayoutAlign="start stretch">
+      <div class="pt-3 mr-3" fxLayout="column" fxLayoutAlign="start stretch">
+        <div class="sticky" *ngIf="getAggregatedContent() !== ''">
+          <div *ngFor="let profile of getProfiles(); index as ind" id="side-bar-{{ind}}"
+          class="p-1 mb-2 border border-dark rounded font-weight-bold">
+            {{profile.file.name}}
+          </div>
+        </div>
+      </div>
+      <div class="w-100">
+        <div class="sticky mt-3" *ngIf="getAggregatedContent() !== ''">
+          <div class="p-2 border rounded bg-dark">
+            <code class="text-white">
+              <span *ngFor="let property of getEditorBreadcrumbArray(); index as i">>
+                <a class="link" (click)="updateEditorCursorPosition(i)"
+                style="text-decoration: none; cursor: pointer">{{property}}
+                </a>
+              </span>
+            </code>
+          </div>
+        </div>
+        <div class="aggregate-display w-100 bg-white">
+          <div class="pt-3" *ngIf="getAggregatedContent() !== ''"></div>
+          <div fxLayoutAlign="start stretch" id="display-aggregate" class="border rounded"
+          [hidden]="getAggregatedContent() === ''">
+          </div>
+        </div>
       </div>
     </div>
   </div>

@@ -1,3 +1,4 @@
+import { HttpClientModule } from '@angular/common/http';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 
 import { NgModule } from '@angular/core';
@@ -9,9 +10,6 @@ import { AppRoutingModule } from './app-routing.module';
 
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { SpringProfileModule } from './spring-profile/spring-profile.module';
-import { DemoMaterialModule } from './material-module';
-import { HttpClientModule } from '@angular/common/http';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 @NgModule({
   declarations: [
@@ -21,9 +19,8 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     BrowserModule,
     AppRoutingModule,
     FlexLayoutModule,
-    SpringProfileModule,
-    DemoMaterialModule,
     HttpClientModule,
+    SpringProfileModule,
     DragDropModule
   ],
   providers: [],

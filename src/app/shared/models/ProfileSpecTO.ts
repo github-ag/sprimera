@@ -1,9 +1,15 @@
 export class ProfileSpecTO {
   profile: string;
-  content: string;
+  yamlContent: string;
 
-  constructor(profile: string, content: string) {
+  jsonContent!: any;
+  propertyList!: any[];
+
+  constructor(profile: string, yamlContent: string, jsonContent?: any, propertyList?: any[]) {
     this.profile = profile;
-    this.content = content;
+    this.yamlContent = yamlContent;
+
+    this.jsonContent = jsonContent || null;
+    this.propertyList = propertyList || [];
   }
 }

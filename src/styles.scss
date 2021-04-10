@@ -1,6 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
 
-
 @import '~codemirror/lib/codemirror.css';
 @import '~codemirror/theme/idea.css';
 @import '~codemirror/addon/fold/foldgutter.css';
@@ -9,4 +8,8 @@
 .square-btn {
   height: 35px;
   width: 35px;
+}
+
+.CodeMirror {
+  font-size: 14px;
 }
