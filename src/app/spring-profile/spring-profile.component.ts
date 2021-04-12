@@ -16,6 +16,7 @@ import 'codemirror/addon/fold/foldcode';
 
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/edit/matchbrackets';
+import { PROFILE_COLORS } from '../shared/SHARED_CONSTANTS';
 
 @Component({
   selector: 'app-spring-profile',
@@ -65,6 +66,8 @@ export class SpringProfileComponent implements OnInit {
   private propertyTolineBreadcrumbMap: any;
   private breadcrumbEditorLine = -1;
   private mergeEditor: any;
+
+  COLOR_ARRAY: string[] = PROFILE_COLORS;
 
   constructor(private renderer: Renderer2, private profileAggregateService: ProfileAggregatorService) {
     this.SPACE_REPLACE = ' '.repeat(this.SPACES_TO_ONE_TAB);
@@ -271,10 +274,10 @@ export class SpringProfileComponent implements OnInit {
 
     const profileAggregateList: ProfileSpecTO[] = [];
 
-    this.profiles.forEach((profileDataTO: ProfileDataTO) => {
+    this.profiles.forEach((profileDataTO: ProfileDataTO, index: number) => {
       profileAggregateList.push(
         new ProfileSpecTO(profileDataTO.file.name,
-        this.profileToContentMapper.get(profileDataTO.file.name), profileDataTO.color)
+        this.profileToContentMapper.get(profileDataTO.file.name), this.COLOR_ARRAY[index])
       );
     });
 
@@ -339,7 +342,7 @@ export class SpringProfileComponent implements OnInit {
 
       // console.log(this.lineToPropertyBreadcrumbMap);
 
-      const profileColorMap = new Map(this.getProfiles().map(i => [i.file.name, i.color]));
+      const profileColorMap = new Map(this.getProfiles().map((prof, index) => [prof.file.name, this.COLOR_ARRAY[index]]));
 
       // console.log(propertyList);
       // console.log(profileMapper);
@@ -350,7 +353,7 @@ export class SpringProfileComponent implements OnInit {
       }
 
       this.getProfiles().forEach((profile, index) => {
-        this.updateColor(document.getElementById(`side-bar-${index}`), profile.color);
+        this.updateColor(document.getElementById(`side-bar-${index}`), this.COLOR_ARRAY[index]);
       });
     }
   }

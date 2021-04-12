@@ -42,11 +42,9 @@
                 <div fxLayout="row" fxLayoutAlign="start stretch">
                   <div id="profile-expand-status-{{i}}" style="width:5px" class="mr-2"></div>
 
-                  <input style="width:20px; cursor:pointer" class="mr-2"
-                    [style.background]="profileData.color"
-                    [(colorPicker)]="profileData.color"
-                    [cpOutputFormat]="'hex'"
-                  />
+                  <div style="width:20px; cursor:pointer" class="mr-2 border border-dark rounded"
+                    [style.background]="this.COLOR_ARRAY[i]">
+                  </div>
 
                   <div fxFlex="row" fxFlex="90" fxLayoutAlign="start center" class="profile-collapse"
                   (click)="updateYAML(profileData.file, 'profile-yaml-' + i, i)"
@@ -86,7 +84,7 @@
     <div fxLayout="row" fxLayoutAlign="start stretch">
       <div class="pt-3 mr-3" fxLayout="column" fxLayoutAlign="start stretch">
         <div class="sticky" *ngIf="getAggregatedContent() !== ''">
-          <div *ngFor="let profile of getProfiles(); index as ind" id="side-bar-{{ind}}"
+          <div *ngFor="let profile of getProfiles(); index as ind" id="side-bar-{{ind}}" [style.background]="this.COLOR_ARRAY[ind]"
           class="p-1 mb-2 border border-dark rounded font-weight-bold">
             {{profile.file.name}}
           </div>
