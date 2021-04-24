@@ -17,6 +17,8 @@ import 'codemirror/addon/fold/foldcode';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/edit/matchbrackets';
 import { PROFILE_COLORS } from '../shared/SHARED_CONSTANTS';
+import {YamlService} from '../shared/yaml/yaml.service';
+import {CodemirrorService} from '../shared/codemirror/codemirror.service';
 
 @Component({
   selector: 'app-spring-profile',
@@ -24,6 +26,14 @@ import { PROFILE_COLORS } from '../shared/SHARED_CONSTANTS';
   styleUrls: ['./spring-profile.component.scss']
 })
 export class SpringProfileComponent implements OnInit {
+
+  constructor(private renderer: Renderer2, private profileAggregateService: ProfileAggregatorService,
+              private yamlFileService: YamlService,
+              private codemirrorService: CodemirrorService) {
+    this.SPACE_REPLACE = ' '.repeat(this.SPACES_TO_ONE_TAB);
+  }
+
+  static DisplayPropertyPathOrFind = true;
 
   SPACES_TO_ONE_TAB = 2;
 
@@ -47,31 +57,16 @@ export class SpringProfileComponent implements OnInit {
     autofocus: true
   };
 
-  private profileYAMLLoaded = new Set();
-
-  isCollapse = true;
-
   private profileToContentMapper = new Map();
-  private profileErrorMessage = new Map();
   private profilesSet = new Set();
   private profiles: ProfileDataTO[] = [];
   private profileIndex = -1;
 
-  private aggregatedContent = '';
+  SUGGESTED_LIST: string[] = [];
+
   private SPACE_REPLACE = '';
 
-  private currentLineInEditor = 0;
-
-  private lineToPropertyBreadcrumbMap: any;
-  private propertyTolineBreadcrumbMap: any;
-  private breadcrumbEditorLine = -1;
-  private mergeEditor: any;
-
   COLOR_ARRAY: string[] = PROFILE_COLORS;
-
-  constructor(private renderer: Renderer2, private profileAggregateService: ProfileAggregatorService) {
-    this.SPACE_REPLACE = ' '.repeat(this.SPACES_TO_ONE_TAB);
-  }
 
   drop(event: CdkDragDrop<string[]>): void {
     if (this.profileIndex !== -1) {
@@ -86,16 +81,19 @@ export class SpringProfileComponent implements OnInit {
     console.log('ngOnInit');
   }
 
-  toggleEnableDrag(): void {
-    this.IS_DRAGGABLE = !this.IS_DRAGGABLE;
-  }
+  toggleEnableDrag = () => this.IS_DRAGGABLE = !this.IS_DRAGGABLE;
+  getProfileIndex = () => this.profileIndex;
+  getAggregatedContent = () => this.codemirrorService.content;
+  getProfiles = () => this.profiles;
+  getEditorBreadcrumbArray = () => this.codemirrorService.getEditorBreadcrumbArray();
+  getProfileErrorMessage = (file: File) => this.yamlFileService.getProfileErrorMessage(file);
+  updateEditorCursorPosition = (index: number) => this.codemirrorService.updateEditorCursorPosition(index);
 
-  getProfileIndex(): number {
-    return this.profileIndex;
+  get displayPropertyPathOrFind(): boolean {
+    return SpringProfileComponent.DisplayPropertyPathOrFind;
   }
-
-  getAggregatedContent(): string {
-    return this.aggregatedContent;
+  toggleDisplayPropertyPathOrFind(): void {
+    SpringProfileComponent.DisplayPropertyPathOrFind = !SpringProfileComponent.DisplayPropertyPathOrFind;
   }
 
   uploadFiles(event: any): void {
@@ -104,7 +102,7 @@ export class SpringProfileComponent implements OnInit {
       if (!this.profilesSet.has(file.name)) {
         this.profilesSet.add(file.name);
         this.profiles.push(new ProfileDataTO(file));
-        this.aggregatedContent = '';
+        this.codemirrorService.content = '';
 
         const index = this.profiles.length - 1;
 
@@ -113,11 +111,11 @@ export class SpringProfileComponent implements OnInit {
           const content = e?.target?.result || '';
 
           this.profileToContentMapper.set(file.name,
-            this.replaceAll(content, '\t', this.SPACE_REPLACE)
+            this.yamlFileService.replaceAll(content, '\t', this.SPACE_REPLACE)
           );
 
           const divStatus = document.getElementById('profile-expand-status-' + index);
-          this.updateCssValidate(divStatus, file, content);
+          this.yamlFileService.updateCssValidate(divStatus, file, content);
         };
         reader.readAsText(file);
       }
@@ -135,16 +133,12 @@ export class SpringProfileComponent implements OnInit {
     console.log(this.profilesSet);
   }
 
-  getProfiles(): ProfileDataTO[] {
-    return this.profiles;
-  }
-
   removeFile(index: number, file: File): void {
 
     this.profiles = this.profiles.filter((_, i) => i !== index);
 
     this.profileToContentMapper.delete(file.name);
-    this.profileYAMLLoaded.delete(file.name);
+    this.yamlFileService.deleteYaml(file.name);
     this.profilesSet.delete(file.name);
 
     if (this.profileIndex === index) {
@@ -155,18 +149,18 @@ export class SpringProfileComponent implements OnInit {
     }
 
     if (this.getProfiles().length === 0) {
-      this.aggregatedContent = '';
+      this.codemirrorService.content = '';
     }
   }
 
   clearFiles(): void {
     this.profileToContentMapper.clear();
-    this.profileYAMLLoaded.clear();
+    this.yamlFileService.clearYamls();
     this.profilesSet.clear();
     this.profiles = [];
 
     this.ngOnInit();
-    this.aggregatedContent = '';
+    this.codemirrorService.content = '';
   }
 
   collapseProfileExceptIndex(index: number): any {
@@ -196,7 +190,7 @@ export class SpringProfileComponent implements OnInit {
 
     this.profileIndex = index;
 
-    if (!this.profileYAMLLoaded.has(file.name)) {
+    if (!this.yamlFileService.getYaml(file.name)) {
 
       const codemirror = CodeMirror.fromTextArea(document.getElementById(id) as HTMLTextAreaElement,
       this.CODEMIRROR_CONFIG
@@ -210,59 +204,18 @@ export class SpringProfileComponent implements OnInit {
         codemirror.setValue(content);
         codemirror.refresh();
 
-        this.updateCssValidate(divStatus, file, content);
+        this.yamlFileService.updateCssValidate(divStatus, file, content);
       };
       reader.readAsText(file);
-      this.profileYAMLLoaded.add(file.name);
+      this.yamlFileService.addYaml(file.name);
 
       codemirror.on('change', (event) => {
 
-        const content = this.replaceAll(event.getValue(), '\t', this.SPACE_REPLACE);
+        const content = this.yamlFileService.replaceAll(event.getValue(), '\t', this.SPACE_REPLACE);
         this.profileToContentMapper.set(file.name, content);
-
-        this.updateCssValidate(divStatus, file, content);
+        this.yamlFileService.updateCssValidate(divStatus, file, content);
       });
     }
-  }
-
-  updateCssValidate(divStatus: any, file: File, content: string): void {
-    if (this.validateYAML(file, content)) {
-      this.toggleValidInValid(divStatus, 'bg-warning', 'bg-success');
-    }
-    else {
-      this.toggleValidInValid(divStatus, 'bg-success', 'bg-warning');
-    }
-  }
-
-  replaceAll(data: string, search: string, replace: string): string {
-    return data.split(search).join(replace);
-  }
-
-  toggleValidInValid(div: any, removeClass: string, addClass: string): void {
-    div.classList.remove(removeClass);
-    div.classList.add(addClass);
-  }
-
-  isProfileYAMLLoaded(file: File): boolean {
-    return this.profileYAMLLoaded.has(file.name);
-  }
-
-  validateYAML(file: File, content: string): boolean {
-    try {
-      yaml.load(content);
-      this.profileErrorMessage.delete(file.name);
-      return true;
-    }
-    catch (e) {
-      this.profileErrorMessage.set(file.name, e.message);
-    }
-    return false;
-  }
-
-  getProfileErrorMessage(file: File): any {
-
-    const error = this.profileErrorMessage.get(file.name);
-    return Boolean(error) ? error : null;
   }
 
   aggregateProfiles(): void {
@@ -281,7 +234,7 @@ export class SpringProfileComponent implements OnInit {
       );
     });
 
-    this.aggregatedContent = '';
+    this.codemirrorService.content = '';
     this.profileAggregateService.aggregateProfile(profileAggregateList).subscribe(
       (response: ProfileSpecTO) => {
         const parent = document.getElementById('display-aggregate');
@@ -289,33 +242,18 @@ export class SpringProfileComponent implements OnInit {
           parent.innerHTML = '<textarea id="aggregate-textarea-content"></textarea>';
         }
 
-        const modifyConfig = JSON.parse(JSON.stringify(this.CODEMIRROR_CONFIG));
-        modifyConfig.readOnly = true;
-        modifyConfig.foldGutter = false;
-
-        const codemirror = CodeMirror.fromTextArea(document.getElementById('aggregate-textarea-content') as HTMLTextAreaElement,
-        modifyConfig
-        );
-
-        this.mergeEditor = codemirror;
-
-        codemirror.on('dblclick', (instance: any, event: Event) => {
-          this.breadcrumbEditorLine = instance.getCursor().line + 1;
-        });
-
         const jsonObject  = response.jsonContent;
-        const jsonContent = JSON.stringify(jsonObject, null, this.SPACES_TO_ONE_TAB);
-        this.aggregatedContent = jsonContent;
-
+        this.codemirrorService.mergeEditorConstruct(
+          document.getElementById('aggregate-textarea-content') as HTMLTextAreaElement,
+          JSON.parse(JSON.stringify(this.CODEMIRROR_CONFIG)),
+          jsonObject
+        );
         setTimeout(() => {
-
-          codemirror.setValue(this.aggregatedContent);
-          codemirror.setSize('100%', '100%');
-          codemirror.refresh();
-
+          this.codemirrorService.showEditor();
           setTimeout(() => {
-            this.updateCodeMirrorVisual(codemirror, response.propertyList, jsonObject);
-          }, 500);
+            this.codemirrorService.updateCodeMirrorVisual(this.getProfiles(), this.COLOR_ARRAY, response.propertyList, jsonObject);
+            this.SUGGESTED_LIST = this.codemirrorService.findSuggestedPropertyList('');
+          }, 200);
         }, 500);
       },
       (error) => {
@@ -324,149 +262,7 @@ export class SpringProfileComponent implements OnInit {
     );
   }
 
-  updateCodeMirrorVisual(doc: any, propertyList: any, jsonObject: any): void {
-
-    const parent = document.getElementById('display-aggregate');
-    const lineElements = parent?.getElementsByClassName('CodeMirror-linenumber CodeMirror-gutter-elt');
-    if (lineElements) {
-
-      const profileMapper = new Map();
-      this.currentLineInEditor = 2;
-
-      this.lineToPropertyBreadcrumbMap = new Map();
-      this.propertyTolineBreadcrumbMap = new Map();
-      this.breadcrumbEditorLine = -1;
-
-      // console.log(jsonObject);
-      this.getLineOfEachPropertyValue('', jsonObject, profileMapper, false);
-
-      // console.log(this.lineToPropertyBreadcrumbMap);
-
-      const profileColorMap = new Map(this.getProfiles().map((prof, index) => [prof.file.name, this.COLOR_ARRAY[index]]));
-
-      // console.log(propertyList);
-      // console.log(profileMapper);
-      for (let i = 0; i < propertyList.length; ++i) {
-        const prop = propertyList[i];
-        const lineNumber = profileMapper.get(prop.property);
-        this.updateColor(lineElements[lineNumber], profileColorMap.get(prop.owner));
-      }
-
-      this.getProfiles().forEach((profile, index) => {
-        this.updateColor(document.getElementById(`side-bar-${index}`), this.COLOR_ARRAY[index]);
-      });
-    }
-  }
-
-  updateColor(element: any, color: any): void {
-    if (element) {
-      element.style['background-color'] = color;
-    }
-  }
-
-  ////////////////////// CODE MIRROR VISUAL CHANGE
-
-  highlightLineInDoc(lineNumber: number, doc: any): void {
-    doc.markText({line: lineNumber, ch: 0}, {line: lineNumber, ch: 1000}, {
-      css: 'background-color: red'
-    });
-  }
-
-  getLineOfEachPropertyValue(path: string, root: any,  profileMapper: any, isArray: boolean): void {
-
-    // console.log(1, path, root, `line : ${this.currentLineInEditor}`);
-
-    const parentIndex = this.currentLineInEditor;
-    for (const pro of Object.keys(root)) {
-      const val = root[pro];
-      const newPath = this.generatePropertyPath(path, pro);
-
-      if (this.propertyType(val) === 'primitive' && isArray) {
-        profileMapper.set(path, parentIndex - 1);
-        // console.log(`2 line : ${parentIndex - 1} >> ${path} = ${val}`);
-        this.lineToPropertyBreadcrumbMap.set(this.currentLineInEditor, `${newPath}.${val}`);
-        this.propertyTolineBreadcrumbMap.set(`${newPath}.${val}`, this.currentLineInEditor);
-        // console.log(`${newPath}.${val} = line : ${this.currentLineInEditor}`);
-        ++this.currentLineInEditor;
-        continue;
-      }
-
-      this.lineToPropertyBreadcrumbMap.set(this.currentLineInEditor, newPath);
-      this.propertyTolineBreadcrumbMap.set(newPath, this.currentLineInEditor);
-      // console.log(`${newPath} = line : ${this.currentLineInEditor}`);
-
-      if (val instanceof Object) {
-        ++this.currentLineInEditor;
-        this.getLineOfEachPropertyValue(newPath, val, profileMapper, val instanceof Array);
-      }
-      else {
-        profileMapper.set(newPath, this.currentLineInEditor);
-        // console.log(`4 LINE : ${this.currentLineInEditor} >> ${newPath} = ${val}`);
-      }
-      ++this.currentLineInEditor;
-    }
-  }
-
-  propertyType(value: any): string {
-    if (value instanceof Array) {
-      return 'Array';
-    }
-    else if (value instanceof Object) {
-      return 'object';
-    }
-    return 'primitive';
-  }
-
-  generatePropertyPath(path: string, property: string): string {
-    if (path === '') {
-      return property;
-    }
-    return `${path}.${property}`;
-  }
-
-  getEditorBreadcrumbArray(): string[] {
-    return this.lineToPropertyBreadcrumbMap?.get(this.breadcrumbEditorLine)?.split('.') || [''];
-  }
-
-  getBreadcrumbEditorLine(): number {
-    return this.breadcrumbEditorLine;
-  }
-
-  updateEditorCursorPosition(index: number): void {
-    this.mergeEditor.focus();
-
-    const path = this.getEditorBreadcrumbArray().slice(0, index + 1).join('.');
-    const cursorPos = this.propertyTolineBreadcrumbMap.get(path);
-
-    // console.log(path);
-    try {
-      if (cursorPos !== null) {
-        // console.log(cursorPos - 1);
-        this.mergeEditor.setCursor(cursorPos - 1, 0);
-      }
-
-      const startLastIndex = this.getPropertyStartEndIndex(this.mergeEditor.getLine(cursorPos - 1));
-      this.mergeEditor.setSelection(
-        {line: cursorPos - 1, ch: startLastIndex[0]},
-        {line: cursorPos - 1, ch: startLastIndex[1]}
-      );
-    } catch (exception) {
-      console.error(exception);
-    }
-  }
-
-  getPropertyStartEndIndex(line: string): any {
-
-    const start = line.indexOf('"');
-    if (start === -1) {
-      return [0, 0];
-    }
-    for (let last = start + 1; last < line.length; ++last) {
-      if (line.charAt(last - 1) !== '\\' && line.charAt(last) === '"') {
-        return [start, last + 1];
-      }
-    }
-
-    return [0, 0];
+  highSuggestedText(text: string): void {
+    this.codemirrorService.highlightPropertyInPropertyPath(text);
   }
 }

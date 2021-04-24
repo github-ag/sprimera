@@ -91,15 +91,36 @@
         </div>
       </div>
       <div class="w-100">
-        <div class="sticky mt-3" *ngIf="getAggregatedContent() !== ''">
-          <div class="p-2 border rounded bg-dark">
-            <code class="text-white">
-              <span *ngFor="let property of getEditorBreadcrumbArray(); index as i">>
-                <a class="link" (click)="updateEditorCursorPosition(i)"
-                style="text-decoration: none; cursor: pointer">{{property}}
-                </a>
+        <div class="sticky mt-3" fxLayout="row" fxLayoutAlign="space-between start" *ngIf="getAggregatedContent() !== ''">
+          <div class="w-100" style="min-height: 40px">
+            <code class="border bg-dark text-white p-2" *ngIf="displayPropertyPathOrFind else findPropertyTemplate"
+                  style="min-height: 40px">
+              <span *ngFor="let property of getEditorBreadcrumbArray(); index as ind" class="font-weight-bold find-property"
+              >{{ind > 0 ? '.' : ''}}<a class="link"
+                                        (click)="updateEditorCursorPosition(ind)"
+                                        style="text-decoration: none; cursor: pointer"
+              >{{property}}</a>
               </span>
             </code>
+            <ng-template #findPropertyTemplate>
+              <div class="w-100 find-property">
+                <ng-autocomplete
+                  [data]="SUGGESTED_LIST"
+                  (selected)="highSuggestedText($event)"
+                  (inputChanged)="highSuggestedText($event)"
+                  [placeholder]="'Search Property'"
+                  [itemTemplate]="suggestItemTemplate">
+                </ng-autocomplete>
+                <ng-template #suggestItemTemplate let-item>
+                  <a [innerHTML]="item"></a>
+                </ng-template>
+              </div>
+            </ng-template>
+          </div>
+          <div fxLayoutAlign="center center" class="ml-1" style="height: 40px; cursor: pointer"
+               (click)="toggleDisplayPropertyPathOrFind()">
+            <span class="material-icons" *ngIf="displayPropertyPathOrFind else cancelFindBtnTemplate">search</span>
+            <ng-template #cancelFindBtnTemplate><span class="material-icons">search_off</span></ng-template>
           </div>
         </div>
         <div class="aggregate-display w-100 bg-white">
