@@ -43,7 +43,7 @@
                   <div id="profile-expand-status-{{i}}" style="width:5px" class="mr-2"></div>
 
                   <div style="width:20px; cursor:pointer" class="mr-2 border border-dark rounded"
-                    [style.background]="this.COLOR_ARRAY[i]">
+                    [style.background]="profileData.color.color">
                   </div>
 
                   <div fxFlex="row" fxFlex="90" fxLayoutAlign="start center" class="profile-collapse"
@@ -84,9 +84,10 @@
     <div fxLayout="row" fxLayoutAlign="start stretch">
       <div class="pt-3 mr-3" fxLayout="column" fxLayoutAlign="start stretch">
         <div class="sticky" *ngIf="getAggregatedContent() !== ''">
-          <div *ngFor="let profile of getProfiles(); index as ind" id="side-bar-{{ind}}" [style.background]="this.COLOR_ARRAY[ind]"
-          class="p-1 mb-2 border border-dark rounded font-weight-bold">
-            {{profile.file.name}}
+          <div *ngFor="let profileData of getProfiles(); index as ind" id="side-bar-{{ind}}"
+               [style.background]="profileData.color.color"
+               class="p-1 mb-2 border border-dark rounded font-weight-bold">
+            {{profileData.file.name}}
           </div>
         </div>
       </div>

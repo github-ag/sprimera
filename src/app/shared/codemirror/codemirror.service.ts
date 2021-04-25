@@ -27,7 +27,7 @@ export class CodemirrorService {
 
     this._mergeEditor.on('dblclick', (instance: any, event: Event) => {
       this.breadcrumbEditorLine = instance.getCursor().line + 1;
-      SpringProfileComponent.DisplayPropertyPathOrFind = true;
+      SpringProfileComponent.DisplayPropertyPathOrFind = true; // circular dependency
     });
 
     this._content = JSON.stringify(data, null, 2);
@@ -49,7 +49,7 @@ export class CodemirrorService {
     this._breadcrumbEditorLine = line;
   }
 
-  updateCodeMirrorVisual(profileData: ProfileDataTO[], COLOR_ARRAY: string[], propertyList: any, jsonObject: any): void {
+  updateCodeMirrorVisual(profileData: ProfileDataTO[], propertyList: any, jsonObject: any): void {
 
     const parent = document.getElementById('display-aggregate');
     const lineElements = parent?.getElementsByClassName('CodeMirror-linenumber CodeMirror-gutter-elt');
@@ -64,7 +64,7 @@ export class CodemirrorService {
 
       this.getLineOfEachPropertyValue('', jsonObject, profileMapper, false);
 
-      const profileColorMap = new Map(profileData.map((prof, index) => [prof.file.name, COLOR_ARRAY[index]]));
+      const profileColorMap = new Map(profileData.map((prof, index) => [prof.file.name, prof.color.color]));
 
       // tslint:disable-next-line:prefer-for-of
       for (let i = 0; i < propertyList.length; ++i) {
@@ -74,7 +74,7 @@ export class CodemirrorService {
       }
 
       profileData.forEach((profile, index) => {
-        this.updateColor(document.getElementById(`side-bar-${index}`), COLOR_ARRAY[index]);
+        this.updateColor(document.getElementById(`side-bar-${index}`), profile.color.color);
       });
     }
   }
@@ -185,7 +185,7 @@ export class CodemirrorService {
   }
 
   findSuggestedPropertyList(text: string): string[] {
-    console.log('search : ', text.substr(text.lastIndexOf('.') + 1));
+    // console.log('search : ', text.substr(text.lastIndexOf('.') + 1));
     const suggestedPropertyList: string[] = [];
     this.propertyTolineBreadcrumbMap.forEach((value: number, key: string) => {
       if (key.startsWith(text) && key.length !== text.length) {

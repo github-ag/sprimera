@@ -16,9 +16,9 @@ import 'codemirror/addon/fold/foldcode';
 
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/edit/matchbrackets';
-import { PROFILE_COLORS } from '../shared/SHARED_CONSTANTS';
 import {YamlService} from '../shared/yaml/yaml.service';
 import {CodemirrorService} from '../shared/codemirror/codemirror.service';
+import {ColorProviderService} from '../shared/color-provider/color-provider.service';
 
 @Component({
   selector: 'app-spring-profile',
@@ -29,7 +29,8 @@ export class SpringProfileComponent implements OnInit {
 
   constructor(private renderer: Renderer2, private profileAggregateService: ProfileAggregatorService,
               private yamlFileService: YamlService,
-              private codemirrorService: CodemirrorService) {
+              private codemirrorService: CodemirrorService,
+              private colorProviderService: ColorProviderService) {
     this.SPACE_REPLACE = ' '.repeat(this.SPACES_TO_ONE_TAB);
   }
 
@@ -66,8 +67,6 @@ export class SpringProfileComponent implements OnInit {
 
   private SPACE_REPLACE = '';
 
-  COLOR_ARRAY: string[] = PROFILE_COLORS;
-
   drop(event: CdkDragDrop<string[]>): void {
     if (this.profileIndex !== -1) {
       this.profileIndex = event.currentIndex;
@@ -101,7 +100,7 @@ export class SpringProfileComponent implements OnInit {
     for (const file of event.target.files) {
       if (!this.profilesSet.has(file.name)) {
         this.profilesSet.add(file.name);
-        this.profiles.push(new ProfileDataTO(file));
+        this.profiles.push(new ProfileDataTO(file, this.colorProviderService.getColor()));
         this.codemirrorService.content = '';
 
         const index = this.profiles.length - 1;
@@ -135,6 +134,7 @@ export class SpringProfileComponent implements OnInit {
 
   removeFile(index: number, file: File): void {
 
+    this.colorProviderService.addColor(this.profiles[index].color);
     this.profiles = this.profiles.filter((_, i) => i !== index);
 
     this.profileToContentMapper.delete(file.name);
@@ -230,7 +230,7 @@ export class SpringProfileComponent implements OnInit {
     this.profiles.forEach((profileDataTO: ProfileDataTO, index: number) => {
       profileAggregateList.push(
         new ProfileSpecTO(profileDataTO.file.name,
-        this.profileToContentMapper.get(profileDataTO.file.name), this.COLOR_ARRAY[index])
+        this.profileToContentMapper.get(profileDataTO.file.name), profileDataTO.color.color)
       );
     });
 
@@ -251,7 +251,7 @@ export class SpringProfileComponent implements OnInit {
         setTimeout(() => {
           this.codemirrorService.showEditor();
           setTimeout(() => {
-            this.codemirrorService.updateCodeMirrorVisual(this.getProfiles(), this.COLOR_ARRAY, response.propertyList, jsonObject);
+            this.codemirrorService.updateCodeMirrorVisual(this.getProfiles(), response.propertyList, jsonObject);
             this.SUGGESTED_LIST = this.codemirrorService.findSuggestedPropertyList('');
           }, 200);
         }, 500);
