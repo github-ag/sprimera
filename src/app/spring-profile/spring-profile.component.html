@@ -43,7 +43,7 @@
                   <div id="profile-expand-status-{{i}}" style="width:5px" class="mr-2"></div>
 
                   <div style="width:20px; cursor:pointer" class="mr-2 border border-dark rounded"
-                    [style.background]="this.COLOR_ARRAY[i]">
+                    [style.background]="profileData.color.color">
                   </div>
 
                   <div fxFlex="row" fxFlex="90" fxLayoutAlign="start center" class="profile-collapse"
@@ -84,22 +84,44 @@
     <div fxLayout="row" fxLayoutAlign="start stretch">
       <div class="pt-3 mr-3" fxLayout="column" fxLayoutAlign="start stretch">
         <div class="sticky" *ngIf="getAggregatedContent() !== ''">
-          <div *ngFor="let profile of getProfiles(); index as ind" id="side-bar-{{ind}}" [style.background]="this.COLOR_ARRAY[ind]"
-          class="p-1 mb-2 border border-dark rounded font-weight-bold">
-            {{profile.file.name}}
+          <div *ngFor="let profileData of getProfiles(); index as ind" id="side-bar-{{ind}}"
+               [style.background]="profileData.color.color"
+               class="p-1 mb-2 border border-dark rounded font-weight-bold">
+            {{profileData.file.name}}
           </div>
         </div>
       </div>
       <div class="w-100">
-        <div class="sticky mt-3" *ngIf="getAggregatedContent() !== ''">
-          <div class="p-2 border rounded bg-dark">
-            <code class="text-white">
-              <span *ngFor="let property of getEditorBreadcrumbArray(); index as i">>
-                <a class="link" (click)="updateEditorCursorPosition(i)"
-                style="text-decoration: none; cursor: pointer">{{property}}
-                </a>
+        <div class="sticky mt-3" fxLayout="row" fxLayoutAlign="space-between start" *ngIf="getAggregatedContent() !== ''">
+          <div class="w-100" style="min-height: 40px">
+            <code class="border bg-dark text-white p-2" *ngIf="displayPropertyPathOrFind else findPropertyTemplate"
+                  style="min-height: 40px">
+              <span *ngFor="let property of getEditorBreadcrumbArray(); index as ind" class="font-weight-bold find-property"
+              >{{ind > 0 ? '.' : ''}}<a class="link"
+                                        (click)="updateEditorCursorPosition(ind)"
+                                        style="text-decoration: none; cursor: pointer"
+              >{{property}}</a>
               </span>
             </code>
+            <ng-template #findPropertyTemplate>
+              <div class="w-100 find-property">
+                <ng-autocomplete
+                  [data]="SUGGESTED_LIST"
+                  (selected)="highSuggestedText($event)"
+                  (inputChanged)="highSuggestedText($event)"
+                  [placeholder]="'Search Property'"
+                  [itemTemplate]="suggestItemTemplate">
+                </ng-autocomplete>
+                <ng-template #suggestItemTemplate let-item>
+                  <a [innerHTML]="item"></a>
+                </ng-template>
+              </div>
+            </ng-template>
+          </div>
+          <div fxLayoutAlign="center center" class="ml-1" style="height: 40px; cursor: pointer"
+               (click)="toggleDisplayPropertyPathOrFind()">
+            <span class="material-icons" *ngIf="displayPropertyPathOrFind else cancelFindBtnTemplate">search</span>
+            <ng-template #cancelFindBtnTemplate><span class="material-icons">search_off</span></ng-template>
           </div>
         </div>
         <div class="aggregate-display w-100 bg-white">

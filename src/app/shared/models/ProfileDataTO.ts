@@ -1,14 +1,16 @@
+import {Color} from './Color';
+
 export class ProfileDataTO {
   file: File;
   dragDisabled: boolean;
   isCollapsed: boolean;
-  // color: string;
+  color: Color;
 
-  constructor(file: File) {
+  constructor(file: File, color: Color) {
     this.file = file;
     this.dragDisabled = false;
     this.isCollapsed = true;
-    // this.color = '#ffffff00';
+    this.color = color;
   }
 
   // setColor(color: string): void {
