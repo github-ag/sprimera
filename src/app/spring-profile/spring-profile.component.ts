@@ -1,6 +1,6 @@
-import { ProfileDataTO } from './../shared/models/ProfileDataTO';
-import { ProfileSpecTO } from './../shared/models/ProfileSpecTO';
-import { ProfileAggregatorService } from './../shared/profile-aggregator/profile-aggregator.service';
+import { ProfileDataTO } from '../shared/models/ProfileDataTO';
+import { ProfileSpecTO } from '../shared/models/ProfileSpecTO';
+import { ProfileAggregatorService } from '../shared/profile-aggregator/profile-aggregator.service';
 import { Component, OnInit, Renderer2 } from '@angular/core';
 import * as CodeMirror from 'codemirror';
 import * as yaml from 'js-yaml';
@@ -79,8 +79,6 @@ export class SpringProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.profileIndex = -1;
-
-    console.log('ngOnInit');
   }
 
   toggleEnableDrag = () => this.IS_DRAGGABLE = !this.IS_DRAGGABLE;
