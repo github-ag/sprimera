@@ -20,13 +20,13 @@ import {YamlService} from '../shared/yaml/yaml.service';
 import {CodemirrorService} from '../shared/codemirror/codemirror.service';
 import {ColorProviderService} from '../shared/color-provider/color-provider.service';
 import {MatDrawer} from '@angular/material/sidenav';
-import {alertAnimation} from '../shared/animation/animation';
+import {alertAnimation, dropAnimation, fileAnimation} from '../shared/animation/animation';
 
 @Component({
   selector: 'app-spring-profile',
   templateUrl: './spring-profile.component.html',
   styleUrls: ['./spring-profile.component.scss'],
-  animations: [alertAnimation]
+  animations: [alertAnimation, fileAnimation, dropAnimation]
 })
 export class SpringProfileComponent implements OnInit {
 

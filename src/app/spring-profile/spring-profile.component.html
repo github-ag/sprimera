@@ -25,18 +25,16 @@
       </div>
     </div>
     <div class="border border-top-0 rounded-bottom p-3">
-      <div *ngIf="getProfiles().length === 0">
-        <div fxLayoutAlign="center start">
-          <img src="../../assets/missing-profiles.png" style="height: 150px;">
-        </div>
-        <div fxLayoutAlign="center start" class="mt-2 font-weight-bold"
-        style="font-size: 20px;">
+      <div fxLayout="column" fxLayoutAlign="center center" style="height: 350px" *ngIf="getProfiles().length === 0"
+           [@dropAnimation]>
+        <img src="assets/missing-profiles.png" style="height: 150px;">
+        <div class="mt-2 font-weight-bold" style="font-size: 20px;">
           No Profiles Found
         </div>
       </div>
       <div>
         <div cdkDropList class="custom-list" fxLayout="column" fxLayoutAlign="start stretch" (cdkDropListDropped)="drop($event)">
-          <div class="border mb-2 rounded" *ngFor="let profileData of getProfiles(); let i = index">
+          <div [@fileAnimation] class="border mb-2 rounded" *ngFor="let profileData of getProfiles(); let i = index">
             <div class="p-2 custom-box" cdkDrag [cdkDragDisabled]="profileData.dragDisabled || !IS_DRAGGABLE">
               <div class="profile-box">
                 <div fxLayout="row" fxLayoutAlign="start stretch">
