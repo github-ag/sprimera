@@ -19,11 +19,14 @@ import 'codemirror/addon/edit/matchbrackets';
 import {YamlService} from '../shared/yaml/yaml.service';
 import {CodemirrorService} from '../shared/codemirror/codemirror.service';
 import {ColorProviderService} from '../shared/color-provider/color-provider.service';
+import {MatDrawer} from '@angular/material/sidenav';
+import {alertAnimation} from '../shared/animation/animation';
 
 @Component({
   selector: 'app-spring-profile',
   templateUrl: './spring-profile.component.html',
-  styleUrls: ['./spring-profile.component.scss']
+  styleUrls: ['./spring-profile.component.scss'],
+  animations: [alertAnimation]
 })
 export class SpringProfileComponent implements OnInit {
 
@@ -132,7 +135,7 @@ export class SpringProfileComponent implements OnInit {
     console.log(this.profilesSet);
   }
 
-  removeFile(index: number, file: File): void {
+  removeFile(index: number, file: File, sideNav: MatDrawer): void {
 
     this.colorProviderService.addColor(this.profiles[index].color);
     this.profiles = this.profiles.filter((_, i) => i !== index);
@@ -150,6 +153,7 @@ export class SpringProfileComponent implements OnInit {
 
     if (this.getProfiles().length === 0) {
       this.codemirrorService.content = '';
+      sideNav?.close();
     }
   }
 

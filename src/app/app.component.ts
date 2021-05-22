@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import * as CodeMirror from 'codemirror';
 
 @Component({
   selector: 'app-root',

@@ -21,7 +21,7 @@ export class CodemirrorService {
   mergeEditorConstruct(codemirrorTextArea: any, configuration: any, data: any): void {
 
     configuration.foldGutter = false;
-    configuration.readOnly = true;
+    configuration.readOnly = false;
 
     this._mergeEditor = CodeMirror.fromTextArea(codemirrorTextArea, configuration);
 

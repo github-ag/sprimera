@@ -5,11 +5,11 @@
       <app-button [label]="'Choose'" [image]="'add'" (clicked)="fileChooserExecute(fileChooser)"
       [labelCss]="'mr-2'" [buttonCss]="'mr-3'">
       </app-button>
-      <app-button [label]="'Clear'" [image]="'close'" (clicked)="clearFiles()"
+      <app-button [label]="'Clear'" [image]="'close'" (clicked)="clearFiles(); sideNav.close()"
       [labelCss]="'mr-2'" [buttonCss]="'mr-3'">
       </app-button>
 
-      <app-button [label]="'Aggregate'" [image]="'send'" (clicked)="aggregateProfiles()"
+      <app-button [label]="'Aggregate'" [image]="'call_merge'" (clicked)="aggregateProfiles()"
       [labelCss]="'ml-2'" [leftIcon]="false" [buttonCss]="'mr-3'">
       </app-button>
 
@@ -60,7 +60,7 @@
 
                   <div fxFlex="10" fxLayoutAlign="end center">
                     <app-button [image]="'delete'" [buttonCss]="'square-btn'" [align]="'center center'"
-                    (clicked)="removeFile(i, profileData.file)"
+                    (clicked)="removeFile(i, profileData.file, sideNav)"
                     ></app-button>
                   </div>
                 </div>
@@ -81,56 +81,73 @@
       </div>
     </div>
 
-    <div fxLayout="row" fxLayoutAlign="start stretch">
-      <div class="pt-3 mr-3" fxLayout="column" fxLayoutAlign="start stretch">
-        <div class="sticky" *ngIf="getAggregatedContent() !== ''">
-          <div *ngFor="let profileData of getProfiles(); index as ind" id="side-bar-{{ind}}"
-               [style.background]="profileData.color.color"
-               class="p-1 mb-2 border border-dark rounded font-weight-bold">
-            {{profileData.file.name}}
+    <mat-drawer-container>
+      <mat-drawer #sideNav mode="side" opened="false" [position]="'end'">
+        <div fxLayout="column" fxLayoutAlign="end end" class="mb-5 pr-3 footer">
+          <div class="sticky" *ngIf="getAggregatedContent() !== ''">
+            <div *ngFor="let profileData of getProfiles(); index as ind" id="side-bar-{{ind}}"
+                 style="width: 150px; word-break: break-all"
+                 [style.background]="profileData.color.color"
+                 class="p-2 mb-2 font-weight-bold rounded-left text-white">
+              {{profileData.file.name}}
+            </div>
           </div>
         </div>
-      </div>
-      <div class="w-100">
-        <div class="sticky mt-3" fxLayout="row" fxLayoutAlign="space-between start" *ngIf="getAggregatedContent() !== ''">
-          <div class="w-100" style="min-height: 40px">
-            <code class="border bg-dark text-white p-2" *ngIf="displayPropertyPathOrFind else findPropertyTemplate"
-                  style="min-height: 40px">
-              <span *ngFor="let property of getEditorBreadcrumbArray(); index as ind" class="font-weight-bold find-property"
-              >{{ind > 0 ? '.' : ''}}<a class="link"
-                                        (click)="updateEditorCursorPosition(ind)"
-                                        style="text-decoration: none; cursor: pointer"
-              >{{property}}</a>
-              </span>
-            </code>
-            <ng-template #findPropertyTemplate>
-              <div class="w-100 find-property">
-                <ng-autocomplete
-                  [data]="SUGGESTED_LIST"
-                  (selected)="highSuggestedText($event)"
-                  (inputChanged)="highSuggestedText($event)"
-                  [placeholder]="'Search Property'"
-                  [itemTemplate]="suggestItemTemplate">
-                </ng-autocomplete>
-                <ng-template #suggestItemTemplate let-item>
-                  <a [innerHTML]="item"></a>
+      </mat-drawer>
+      <mat-drawer-content>
+        <div fxLayout="row" fxLayoutAlign="start stretch">
+          <div class="w-100">
+            <div class="footer w-100 mt-3 pr-3 pl-3" fxLayout="row" fxLayoutAlign="start start" *ngIf="getAggregatedContent() !== ''">
+              <div class="w-100 border bg-dark text-white hide-scroll" style="height: 40px; overflow-x:auto; overflow-y: hidden">
+                <code *ngIf="displayPropertyPathOrFind else findPropertyTemplate" fxLayout="row" fxLayoutAlign="start center"
+                     class="pl-2" style="height: 40px">
+                  <div class="breadcrumb-box">
+                    <span *ngFor="let property of getEditorBreadcrumbArray(); index as ind" class="font-weight-bold find-property text-danger"
+                    >{{ind > 0 ? '.' : ''}}<a class="link property-breadcrumb"
+                                              (click)="updateEditorCursorPosition(ind)"
+                                              style="text-decoration: none; cursor: pointer">{{property}}</a>
+                  </span>
+                  </div>
+                </code>
+                <ng-template #findPropertyTemplate>
+                  <div class="w-100 find-property">
+                    <ng-autocomplete
+                      [data]="SUGGESTED_LIST"
+                      (selected)="highSuggestedText($event)"
+                      (inputChanged)="highSuggestedText($event)"
+                      [placeholder]="'Search Property'"
+                      [itemTemplate]="suggestItemTemplate">
+                    </ng-autocomplete>
+                    <ng-template #suggestItemTemplate let-item>
+                      <a [innerHTML]="item"></a>
+                    </ng-template>
+                  </div>
                 </ng-template>
               </div>
-            </ng-template>
-          </div>
-          <div fxLayoutAlign="center center" class="ml-1" style="height: 40px; cursor: pointer"
-               (click)="toggleDisplayPropertyPathOrFind()">
-            <span class="material-icons" *ngIf="displayPropertyPathOrFind else cancelFindBtnTemplate">search</span>
-            <ng-template #cancelFindBtnTemplate><span class="material-icons">search_off</span></ng-template>
+
+              <button fxLayoutAlign="center center" class="btn btn-outline-dark ml-1"
+                      (click)="toggleDisplayPropertyPathOrFind()"
+                      style="height: 40px; width: 40px">
+                <span class="material-icons" *ngIf="displayPropertyPathOrFind else cancelFindBtnTemplate">search</span>
+                <ng-template #cancelFindBtnTemplate>
+                  <span class="material-icons">search_off</span>
+                </ng-template>
+              </button>
+              <button fxLayoutAlign="center center" class="btn btn-outline-dark ml-1"
+                      (click)="sideNav.toggle()"
+                      style="height: 40px; width: 40px">
+                <span class="material-icons">apps</span>
+              </button>
+            </div>
+            <div class="aggregate-display w-100 bg-white mb-4">
+              <div class="pt-3" *ngIf="getAggregatedContent() !== ''"></div>
+              <div fxLayoutAlign="start stretch" id="display-aggregate" class="border rounded"
+                   [hidden]="getAggregatedContent() === ''">
+              </div>
+            </div>
           </div>
         </div>
-        <div class="aggregate-display w-100 bg-white">
-          <div class="pt-3" *ngIf="getAggregatedContent() !== ''"></div>
-          <div fxLayoutAlign="start stretch" id="display-aggregate" class="border rounded"
-          [hidden]="getAggregatedContent() === ''">
-          </div>
-        </div>
-      </div>
-    </div>
+      </mat-drawer-content>
+    </mat-drawer-container>
   </div>
 </div>

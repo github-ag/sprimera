@@ -11,6 +11,8 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ColorPickerModule } from 'ngx-color-picker';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {AutocompleteLibModule} from 'angular-ng-autocomplete';
+import {MatSidenavModule} from '@angular/material/sidenav';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [SpringProfileComponent],
@@ -25,7 +27,9 @@ import {AutocompleteLibModule} from 'angular-ng-autocomplete';
     DragDropModule,
     ColorPickerModule,
     MatCheckboxModule,
-    AutocompleteLibModule
+    AutocompleteLibModule,
+    MatSidenavModule,
+    BrowserAnimationsModule
   ],
   exports: [SpringProfileComponent]
 })
