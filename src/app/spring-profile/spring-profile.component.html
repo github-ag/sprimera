@@ -13,6 +13,16 @@
       [labelCss]="'ml-2'" [leftIcon]="false" [buttonCss]="'mr-3'">
       </app-button>
 
+      <div class="dropdown mr-3">
+        <button class="btn btn-outline-dark dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-expanded="false">
+          {{editor}} Merger
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+          <button class="dropdown-item" (click)="changeEditor('JSON')">JSON</button>
+          <button class="dropdown-item" (click)="changeEditor('YAML')">YAML</button>
+        </div>
+      </div>
+
       <div class="mr-3 border rounded pl-1 pr-1" fxLayout="column" fxLayoutAlign="start center">
         <div class="form-check">
           <input type="checkbox" style="height: 27px; width: 27px;" (change)="toggleEnableDrag()"

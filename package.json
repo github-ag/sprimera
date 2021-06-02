@@ -32,10 +32,10 @@
     "codemirror": "^5.60.0",
     "jquery": "^3.6.0",
     "js-yaml": "^4.0.0",
+    "json-to-pretty-yaml": "^1.2.2",
     "material-design-icons": "^3.0.1",
     "rxjs": "~6.6.0",
     "tslib": "^2.0.0",
-    "yaml-sort": "^1.1.0",
     "zone.js": "~0.11.3"
   },
   "devDependencies": {

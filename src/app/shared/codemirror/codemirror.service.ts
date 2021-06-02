@@ -1,7 +1,10 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {ProfileDataTO} from '../models/ProfileDataTO';
 import * as CodeMirror from 'codemirror';
 import {SpringProfileComponent} from '../../spring-profile/spring-profile.component';
+import {CodeEditor, CodemirrorReader, JSON_PARSER, YAML_PARSER} from './codemirror.config';
+
+import * as YAML_PRETTIER from 'yaml';
 
 @Injectable({
   providedIn: 'root'
@@ -15,13 +18,21 @@ export class CodemirrorService {
   private _mergeEditor: any;
 
   private _content = '';
+  private _editor: CodeEditor = CodeEditor.JSON;
 
   constructor() { }
+
+  get editor(): CodeEditor {
+    return this._editor;
+  }
+  set editor(type: CodeEditor) {
+    this._editor = type;
+  }
 
   mergeEditorConstruct(codemirrorTextArea: any, configuration: any, data: any): void {
 
     configuration.foldGutter = false;
-    configuration.readOnly = false;
+    configuration.readOnly = true;
 
     this._mergeEditor = CodeMirror.fromTextArea(codemirrorTextArea, configuration);
 
@@ -30,7 +41,15 @@ export class CodemirrorService {
       SpringProfileComponent.DisplayPropertyPathOrFind = true; // circular dependency
     });
 
-    this._content = JSON.stringify(data, null, 2);
+    switch (this._editor) {
+      case CodeEditor.JSON: {
+        this._content = JSON.stringify(data, null, 2);
+        break;
+      }
+      case CodeEditor.YAML: {
+        this._content = YAML_PRETTIER.stringify(data);
+      }
+    }
   }
   showEditor(): void {
     this._mergeEditor.setValue(this._content);
@@ -56,13 +75,23 @@ export class CodemirrorService {
     if (lineElements) {
 
       const profileMapper = new Map();
-      this.currentLineInEditor = 2;
 
       this.lineToPropertyBreadcrumbMap = new Map();
       this.propertyTolineBreadcrumbMap = new Map();
       this._breadcrumbEditorLine = -1;
 
-      this.getLineOfEachPropertyValue('', jsonObject, profileMapper, false);
+      switch (this._editor) {
+        case CodeEditor.JSON: {
+          this.currentLineInEditor = JSON_PARSER.INITIAL_LINE;
+          this.jsonLineReader('', jsonObject, profileMapper, JSON_PARSER);
+          break;
+        }
+        case CodeEditor.YAML: {
+          this.currentLineInEditor = YAML_PARSER.INITIAL_LINE;
+          this.yamlLineReaderInObject('', jsonObject, profileMapper, YAML_PARSER);
+          break;
+        }
+      }
 
       const profileColorMap = new Map(profileData.map((prof, index) => [prof.file.name, prof.color.color]));
 
@@ -95,7 +124,7 @@ export class CodemirrorService {
     return 'primitive';
   }
 
-  getLineOfEachPropertyValue(path: string, root: any,  profileMapper: any, isArray: boolean): void {
+  jsonLineReader(path: string, root: any,  profileMapper: any, config: CodemirrorReader, isArray: boolean = false): void {
     const parentIndex = this.currentLineInEditor;
     for (const pro of Object.keys(root)) {
       const val = root[pro];
@@ -105,7 +134,7 @@ export class CodemirrorService {
         profileMapper.set(path, parentIndex - 1);
         this.lineToPropertyBreadcrumbMap.set(this.currentLineInEditor, `${newPath}.${val}`);
         this.propertyTolineBreadcrumbMap.set(`${newPath}.${val}`, this.currentLineInEditor);
-        ++this.currentLineInEditor;
+        this.currentLineInEditor += config.ARRAY_PRIMITIVE_PROPERTY;
         continue;
       }
 
@@ -113,13 +142,13 @@ export class CodemirrorService {
       this.propertyTolineBreadcrumbMap.set(newPath, this.currentLineInEditor);
 
       if (val instanceof Object) {
-        ++this.currentLineInEditor;
-        this.getLineOfEachPropertyValue(newPath, val, profileMapper, val instanceof Array);
+        this.currentLineInEditor += config.NEXT_PROPERTY;
+        this.jsonLineReader(newPath, val, profileMapper, config, val instanceof Array);
       }
       else {
         profileMapper.set(newPath, this.currentLineInEditor);
       }
-      ++this.currentLineInEditor;
+      this.currentLineInEditor += config.NEXT_OBJECT_PROPERTY;
     }
   }
 
@@ -170,18 +199,42 @@ export class CodemirrorService {
   }
 
   getPropertyStartEndIndex(line: string): any {
-
-    const start = line.indexOf('"');
-    if (start === -1) {
-      return [0, 0];
-    }
-    for (let last = start + 1; last < line.length; ++last) {
-      if (line.charAt(last - 1) !== '\\' && line.charAt(last) === '"') {
-        return [start, last + 1];
+    switch (this._editor) {
+      ///// JSON PropertyFind Strategy
+      case CodeEditor.JSON: {
+        const start = line.indexOf('"');
+        if (start === -1) {
+          return [0, 0];
+        }
+        for (let last = start + 1; last < line.length; ++last) {
+          if (line.charAt(last - 1) !== '\\' && line.charAt(last) === '"') {
+            return [start, last + 1];
+          }
+        }
+        break;
+      }
+      //// YAML PropertyFind Strategy
+      case CodeEditor.YAML: {
+        const startYAML = this.findFirstAlphaIndex(line);
+        if (startYAML === -1) {
+          return [0, 0];
+        }
+        return [startYAML, line.indexOf(':')];
       }
     }
-
     return [0, 0];
+  }
+
+  findFirstAlphaIndex(line: string): number {
+    function isLetter(c: any): boolean {
+      return c.toLowerCase() !== c.toUpperCase();
+    }
+    for (let index = 0; index < line.length; index++) {
+      if (isLetter(line.charAt(index))) {
+        return index;
+      }
+    }
+    return -1;
   }
 
   findSuggestedPropertyList(text: string): string[] {
@@ -193,5 +246,58 @@ export class CodemirrorService {
       }
     });
     return suggestedPropertyList;
+  }
+
+  addYAMLMultiStringNextLines(val: any): number {
+    if (typeof val === 'string') {
+      return val.split('\n').length;
+    }
+    return 0;
+  }
+
+  yamlLineReaderInObject(path: string, root: any,  profileMapper: any, config: CodemirrorReader): void {
+    for (const pro of Object.keys(root)) {
+
+      const val = root[pro];
+      const newPath = this.generatePropertyPath(path, pro);
+
+      this.lineToPropertyBreadcrumbMap.set(this.currentLineInEditor, newPath);
+      this.propertyTolineBreadcrumbMap.set(newPath, this.currentLineInEditor);
+
+      profileMapper.set(newPath, this.currentLineInEditor);
+      this.currentLineInEditor += (Math.max(1, this.addYAMLMultiStringNextLines(val)));
+      if (val instanceof Array) {
+        this.yamlLineReaderInArray(newPath, val, profileMapper, config);
+      }
+      else if (val instanceof Object) {
+        this.yamlLineReaderInObject(newPath, val, profileMapper, config);
+      }
+    }
+  }
+
+  yamlLineReaderInArray(path: string, root: any,  profileMapper: any, config: CodemirrorReader): void {
+
+    const parentIndex = this.currentLineInEditor;
+    for (const pro of Object.keys(root)) {
+      const val = root[pro];
+      const newPath = this.generatePropertyPath(path, pro);
+
+      profileMapper.set(path, parentIndex);
+      switch (this.propertyType(val)) {
+        case 'primitive': {
+          this.lineToPropertyBreadcrumbMap.set(this.currentLineInEditor, `${newPath}.${val}`);
+          this.propertyTolineBreadcrumbMap.set(`${newPath}.${val}`, this.currentLineInEditor);
+          this.currentLineInEditor += this.addYAMLMultiStringNextLines(val);
+          break;
+        }
+        case 'Array': {
+          this.yamlLineReaderInArray(newPath, val, profileMapper, config);
+          break;
+        }
+        default: {
+          this.yamlLineReaderInObject(newPath, val, profileMapper, config);
+        }
+      }
+    }
   }
 }
