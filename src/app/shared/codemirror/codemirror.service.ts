@@ -12,12 +12,13 @@ export class CodemirrorService {
   private propertyTolineBreadcrumbMap: any;
   private _breadcrumbEditorLine = -1;
   private currentLineInEditor = 0;
-  private _mergeEditor: any;
+  private _mergeEditor: any; //Codemirror text area
 
   private _content = '';
 
   constructor() { }
 
+  // Making the main editor
   mergeEditorConstruct(codemirrorTextArea: any, configuration: any, data: any): void {
 
     configuration.foldGutter = false;
@@ -32,15 +33,17 @@ export class CodemirrorService {
 
     this._content = JSON.stringify(data, null, 2);
   }
+  /////// Showing the editor
   showEditor(): void {
     this._mergeEditor.setValue(this._content);
     this._mergeEditor.setSize('100%', '100%');
     this._mergeEditor.refresh();
   }
-
+  /////////// Setting content of the editor
   set content(data: string) {
     this._content = data;
   }
+  //////// Fetching content of the editor
   get content(): string {
     return this._content;
   }
@@ -62,6 +65,7 @@ export class CodemirrorService {
       this.propertyTolineBreadcrumbMap = new Map();
       this._breadcrumbEditorLine = -1;
 
+      ////////// This functions maps properties and their lines
       this.getLineOfEachPropertyValue('', jsonObject, profileMapper, false);
 
       const profileColorMap = new Map(profileData.map((prof, index) => [prof.file.name, prof.color.color]));
@@ -98,15 +102,15 @@ export class CodemirrorService {
   getLineOfEachPropertyValue(path: string, root: any,  profileMapper: any, isArray: boolean): void {
     const parentIndex = this.currentLineInEditor;
     for (const pro of Object.keys(root)) {
-      const val = root[pro];
-      const newPath = this.generatePropertyPath(path, pro);
+      const val = root[pro]; //// root->main json code, pro->curr property, val->value of curr pro
+      const newPath = this.generatePropertyPath(path, pro); ////// generating path for the current property
 
       if (this.propertyType(val) === 'primitive' && isArray) {
-        profileMapper.set(path, parentIndex - 1);
+        profileMapper.set(path, parentIndex - 1); ///// Setting the current property path to its parent index(line in editor)
         this.lineToPropertyBreadcrumbMap.set(this.currentLineInEditor, `${newPath}.${val}`);
         this.propertyTolineBreadcrumbMap.set(`${newPath}.${val}`, this.currentLineInEditor);
         ++this.currentLineInEditor;
-        continue;
+        continue;  ////// take the next property
       }
 
       this.lineToPropertyBreadcrumbMap.set(this.currentLineInEditor, newPath);
@@ -122,7 +126,7 @@ export class CodemirrorService {
       ++this.currentLineInEditor;
     }
   }
-
+ ////// generate the new path by taking old path and concatinating new property
   generatePropertyPath(path: string, property: string): string {
     if (path === '') {
       return property;
